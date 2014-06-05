@@ -38,9 +38,8 @@
                 $window,
                 $log
             ){
-                // #9: Assign a placeholder object if Web Storage is unavailable to prevent breaking the entire AngularJS app
-                var webStorage = $window[storageType] || ($log.warn('This browser does not support Web Storage!'), {}),
-                    $storage = {
+
+                var $storage = {
                         $default: function(items) {
                             for (var k in items) {
                                 angular.isDefined($storage[k]) || ($storage[k] = items[k]);
@@ -58,6 +57,16 @@
                     },
                     _last$storage,
                     _debounce;
+
+                var webStorage = {};
+                if(_testCapability(storageType)){
+                    webStorage = $window[storageType];
+                }
+                else {
+                    $log.warn('This browser does not support Web Storage!');
+                    $storage.$disabled = true;
+                    return $storage;
+                }
 
                 for (var i = 0, k; i < webStorage.length; i++) {
                     // #8, #10: `webStorage.key(i)` may be an empty string (or throw an exception in IE9 if `webStorage` is empty)
@@ -100,6 +109,17 @@
                 return $storage;
             }
         ];
+    }
+
+    function _testCapability(storageType){
+        var test = 'test';
+        try {
+            window[storageType].setItem(test, test);
+            window[storageType].removeItem(test);
+            return true;
+        } catch(e) {
+            return false;
+        }
     }
 
 })();
